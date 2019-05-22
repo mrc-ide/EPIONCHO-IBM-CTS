@@ -496,7 +496,7 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
                         slope.kmf = 0.0478, int.kMf = 0.313, sex.rat = 0.5, nuone = 201.6189, nutwo = 207.7384, 
                         time.each.comp.worms = 1, time.each.comp.mf = 0.125, mu.w1 = 0.0975, mu.w2 = 4.25, fec.w.1 = 70, fec.w.2 = 0.72,
                         mu.mf1 = 0.95, mu.mf2 = 1.6,  sero.sensitivity.in = 0.8, mf.move.rate = 8.133333,
-                        type.sero = 0, l3.delay = 10, lam.m = 32.4, phi = 19.6, stop.time=25, treat.prob = 0.75,
+                        type.sero = 0, l3.delay = 10, lam.m = 32.4, phi = 19.6, stop.time=50, treat.prob = 0.75,
                         cum.infer= 0.345, up = 0.0096, kap = 1.25, give.treat = 1, treat.start = 15, n.trt=5, treat.int=1, 
                         every = 2/366, pnc = 0.05, gest=2, p.preg=0.05, ke=0.3, age.prev.in=5,
                         ex.dd.int=0, get.equib=0, input.var = 0, input.eq=NA, do.clin.trial=1,
