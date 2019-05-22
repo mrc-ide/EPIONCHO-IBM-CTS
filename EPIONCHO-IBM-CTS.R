@@ -490,7 +490,7 @@ prevalence.for.age <- function(age, ss.in, main.dat)
 
 run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.h = 0.004900419,
                         m.exp = 1.08, f.exp = 0.9, age.exp.m = 0.007, age.exp.f = -0.023, mu.v = 26, int.mf = 0, sigma.L0 = 52,
-                        a.H = 0.8, g = 0.0096, h=0.63, a.v = 0.39, num.comps.worm = 20, real.max.age = 80, N = 100, mean.age = 50,
+                        a.H = 0.8, g = 0.0096, h=0.63, a.v = 0.39, num.comps.worm = 20, real.max.age = 80, N = 500, mean.age = 50,
                         int.L3 = 0.03, int.L2 = 0.03, int.L1 = 0.03, lambda.zero = 0.33, omeg = 0.59,
                         delta.vo = 0.0166, c.v = 0.0205, num.mf.comps = 20, DT = 2/366, int.worms=1, ss.wt = 2, num.ss = 2,
                         slope.kmf = 0.0478, int.kMf = 0.313, sex.rat = 0.5, nuone = 201.6189, nutwo = 207.7384, 
