@@ -1,6 +1,3 @@
-#rm(list=ls(all=TRUE)) #####REMEMBER TO UNCOMMENT FIRST!!!!
-#iter <- as.numeric(Sys.getenv("PBS_ARRAY_INDEX"))
-#set.seed(iter + (iter*3758))
 
 #function rotate matrix, used in mf function 
 rotate <- function(x) t(apply(x, 2, rev))
