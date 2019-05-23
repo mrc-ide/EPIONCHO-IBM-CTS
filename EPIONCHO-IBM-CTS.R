@@ -21,7 +21,7 @@ update.preg <- function(N, p.preg, cur.age, sex, gest, dur.preg, cur.preg, death
   cur.preg[cur.preg==0 & get.preg==1] <- 1
   cur.preg[dur.preg>gest] <- 0
   
-  cur.preg[which(death.vec == 1)] <- 0 #set individuals which die to age 0
+  cur.preg[which(death.vec == 1)] <- 0
   cur.preg[which(cur.age >= real.max.age)] <- 0
   cur.preg[which(cur.age > 40)] <- 0
   cur.preg[which(cur.age < 16)] <- 0
@@ -34,12 +34,12 @@ change.micro <- function(dat, num.comps, mf.cpt, num.mf.comps, ws, DT, time.each
                          up, kap, iteration, treat.vec, give.treat, treat.start, nfix, N, do.clin.trial, start.trial)
   
 {
- # N <- length(dat[,1]) 
-  #indexes for fertile worms (to use in production of mf)
+
+  #indices for fertile worms
   fert.worms.start <-  ws + num.comps*2 
   fert.worms.end <-  (ws-1) + num.comps*3
   
-  #indexes to check if there are males (males start is just 'ws')
+  #indices for male worms
   mal.worms.end <- (ws-1) + num.comps
   mf.mu <- rep(mu.rates.mf[mf.cpt], N)
   fert.worms <- dat[, fert.worms.start:fert.worms.end]
@@ -49,18 +49,14 @@ change.micro <- function(dat, num.comps, mf.cpt, num.mf.comps, ws, DT, time.each
   ################################################
   if( (give.treat == 1 & iteration >= treat.start) | (do.clin.trial==T & iteration >= start.trial) )
   {
-    #which.treat <- which(is.na(treat.vec) != TRUE) #if false, the criteria for at least one treatment have been passed in the adult worm func, treat.vec[ind] is interation*DT
     ## this takes treament vec which is the most recent time since last treatment (either by CT or MDA)
     tao <- ((iteration-1)*DT) - treat.vec #tao is zero if treatment has been given at this timestep
-    #print(treat.vec)
+
     mu.mf.prime <- ((tao + up) ^ (-kap))
-    #print(mu.mf.prime)
-    
-    ## this sets any excexx mortality terms to 0 for individuals 
+
+    ## this sets any excess mortality terms to 0 for individuals 
     ## not receiving treatment because of NA code
     mu.mf.prime[which(is.na(mu.mf.prime) == TRUE)] <- 0
-    
-    #print(sum(mu.mf.prime))
     
     mf.mu <- mf.mu + mu.mf.prime
     
@@ -94,10 +90,7 @@ change.micro <- function(dat, num.comps, mf.cpt, num.mf.comps, ws, DT, time.each
     
     out <- dat[, nfix + mf.cpt] + DT/6*(k1+2*k2+2*k3+k4)
     
-    #print(DT/6*(k1+2*k2+2*k3+k4))
   }  
-  
-  #if(out < 0) {out <- 0}
   
   return(out)
 }
@@ -121,7 +114,7 @@ derivmf.rest <- function(mf.in, mf.mort, mf.move, mf.comp.minus.one, k.in)
   return(out)
 }
 
-#prop of L3 larvae developing into adult worms in one human, expos = total exposure for an individual
+#prop of L3 larvae developing into adult worms in one human
 ## No CTS code
 delta.h <- function(delta.hz, delta.hinf, c.h, L3, m , beta, expos)
 {
@@ -135,11 +128,7 @@ calc.L1 <- function(beta, mf, mf.delay.in, expos, delta.vo, c.v, nuone, mu.v, a.
 {
   delta.vv <- delta.v(delta.vo, c.v, mf, expos)
   
-  #out <- (delta.vv * beta * expos *  mf)  / (mu.v + a.v * mf + nuone) 
-  
   out <- (delta.vv * beta * expos *  mf)  / ((mu.v + a.v * mf) + (nuone * exp (-(4/366) * (mu.v + (a.v * mf.delay.in*expos.delay)))))
-  
-  #if(out < 0) {print('negative L1'); out <- 0}
   
   return(out)
 }
@@ -148,11 +137,8 @@ calc.L1 <- function(beta, mf, mf.delay.in, expos, delta.vo, c.v, nuone, mu.v, a.
 calc.L2 <- function(nuone, L1.in, mu.v, nutwo, mf, a.v)
   
 {
-  #out <- (nuone * L1.in) / (mu.v + nutwo) 
-  
+
   out <- (L1.in * (nuone * exp (-(4/366) * (mu.v + (a.v * mf))))) / (mu.v + nutwo)
-  
-  #if(out < 0) {print('negative L2'); out <- 0}
   
   return(out)
 }
@@ -163,13 +149,11 @@ calc.L3 <- function(nutwo, L2.in, a.H, g, mu.v, sigma.L0)
 {
   out <- (nutwo * L2.in) / ((a.H / g) + mu.v + sigma.L0) 
   
-  #if(out < 0) {print('negative L3'); out <- 0}
-  
   return(out)
 }
 
 #rate of acquisition of new infections in humans
-## No CTS code∑
+## No CTS code
 Wplus1.rate <- function(delta.hz, delta.hinf, c.h, L3, m , beta, expos, DT, expos.main)
   
 {
@@ -204,7 +188,6 @@ mf.per.skin.snip <- function(ss.wt, num.ss, slope.kmf, int.kMf, data, nfw.start,
   all.mfobs <- c()
   
   kmf <- slope.kmf * (rowSums(data[,nfw.start:fw.end])) + int.kMf #rowSums(da... sums up adult worms for all individuals giving a vector of kmfs
-  
   
   mfobs <- rnbinom(pop.size, size = kmf, mu = ss.wt * (rowSums(data[,mf.start:mf.end])))
   
@@ -251,7 +234,7 @@ calc.CMFL <- function(ss.mf.pi, data, ss.wt)
   return(CMFL)
 }
 
-#change in the number of adult worms in an indiviudal host, starts with males then moves to females (new female worms are calculated in male 'section')
+#change in the number of adult worms in an indiviudal host
 ## Contains CTS components
 change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartment, total.dat, num.comps,
                                w.f.l.c, lambda.zero, omeg, expos, ws, DT, mort.rates, mort.rates.macro, time.each.comp, new.worms.m, new.worms.nf.fo,
@@ -264,25 +247,20 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
   ### CTS code chunck -  swapping background macrofilaricidal rates for increased rates in treated individuals
   ############################################################################################################
   
-  
-  #N <- length(treat.vec)
-  
-  #print(N)
-  
   lambda.zero.in <- rep(lambda.zero * DT, N) #loss of fertility
   omeg <- rep(omeg * DT, N) #becoming fertile
   
   #male worms
   
-  cl <- (ws-1) + compartment #calculate which column to use depending on sex, type (fertile or infertile) and compartment
+  cl <- (ws-1) + compartment 
   
-  cur.Wm <- total.dat[, cl] #take current number of worms from matrix
+  cur.Wm <- total.dat[, cl] 
   
   #female worms
   
-  clnf <- (ws - 1) + num.comps + compartment #column for infertile females, num.comps skips over males
+  clnf <- (ws - 1) + num.comps + compartment #column for infertile females
   
-  clf <- (ws - 1) + 2*num.comps + compartment #column for fertile females, 2*num.comps skips over males and infertile females
+  clf <- (ws - 1) + 2*num.comps + compartment #column for fertile females
   
   cur.Wm.nf <- total.dat[, clnf] #take current worm number from matrix infertile females 
   
@@ -291,18 +269,14 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
   mort.fems <- mort.mals <- rep(mort.rates[compartment], N)
   mort.macro <- rep(mort.rates.macro[compartment], N)
   
-  #####################################################  
   ######### 
   #treatment
   #########
   
-  #check if a complier, older than five, time for treatment, still within treatment timeframe
-  #approach assumes individuals which are moved from fertile to non fertile class due to treatment re enter fertile class at standard rate (bit wierd)
-  
   ########################################################
   ### MDA/CTS code chunck -  could be written as a function
   #######################################################
-  if(give.treat == 1 & iteration >= treat.start) ####CHECK 
+  if(give.treat == 1 & iteration >= treat.start) 
   {
     # identify treatment times
     if((((iteration-1)*DT) %% treat.int < DT) & iteration <= treat.stop) #is it a treatment time T/F
@@ -312,22 +286,16 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
                                total.dat[,ageindi] > 5 & rn <= treat.prob) #find individuals which are compliers, older than 5 and under the coverage
       MDA.vec[inds.to.treat]  <-  (iteration-1) * DT #alter vector storing time of treatment 
       if(iteration > treat.start) {mort.fems[inds.to.treat] <- mort.fems[inds.to.treat] + (cum.infer)}#; print('cum.infer')}
-      #mort.fems[inds.to.treat] <- mort.fems[inds.to.treat] + (cum.infer) #alter mortality for cumulative effects of IVM
-      #mort.mals[inds.to.treat] <- mort.mals[inds.to.treat] + (cum.infer)
     }
   }
   if(do.clin.trial==TRUE & iteration >= start.trial) {
       # is it a trial treatment time?
-      # this code means that treatment starts 1 step size after iteration=start.trial
       if(((iteration -1 - start.trial) %% trial.int < DT) & iteration <= stop.treat.trial) 
       {
-      print(iteration)
         # cohort 1 receives ivermectin 
         inds.to.treat <- which(total.dat[,cohortindi]  == 1) #find individuals assigned to control group cohort 1
         if(iteration > start.trial) {mort.fems[inds.to.treat] <- mort.fems[inds.to.treat] + (cum.infer)}#; #print('cum.infer')}
-       # mort.fems[inds.to.treat] <- mort.fems[inds.to.treat] + (cum.infer) #alter mortality for cumulative effects of IVM
-       # mort.mals[inds.to.treat] <- mort.mals[inds.to.treat] + (cum.infer)
-        
+
         ## record time since lastreatment for cohort 1 and 2 - 2 required for duration of macro activty
         inds.to.treat <- which(total.dat[,cohortindi]  == 1 | total.dat[,cohortindi]  == 2) #find individuals assigned to control group cohort 1
         ## or tested group 2
@@ -336,14 +304,12 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
       }
     
     tmp.tsince <- (iteration-1)*DT - CT.vec
-  #  print(tmp.tsince)
+
     inds.to.macro <- which(total.dat[,cohortindi]  == 2 & tmp.tsince <= macro.t ) #find individuals for which macro effect should be applied
-  #  print(inds.to.macro)
+
     mort.fems[inds.to.macro] <- mort.macro[inds.to.macro] #macrofilaricidal activity without cumulative adjustment
     mort.mals[inds.to.macro] <- mort.macro[inds.to.macro] 
     
-   # print(paste("treated mortality rate", mean(mort.fems[inds.to.macro])))
-  #  print(paste("control mortality rate", mean(mort.fems[-c(inds.to.macro)])))
   }
   
   ## set a temoraary CT.vec for MOM activity so that microfilaricidal effects are not modelled
@@ -385,21 +351,14 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
   ##simulate fertility movement of females
     tao <- ((iteration-1)*DT) - treat.vec.fert #time since last treatment affecting fertility
     
-   # print(mean(tao))
-  
     lam.m.temp <- rep(0, N); lam.m.temp[which(is.na(treat.vec.fert) != TRUE)] <- lam.m
     
     f.to.nf.rate <- DT * (lam.m.temp * exp(-phi * tao)) 
     
-    f.to.nf.rate[which(is.na(treat.vec.fert) == TRUE)] <- 0 #these entries in f.to.nf.rate will be NA, lambda.zero.in cannot be NA
+    f.to.nf.rate[which(is.na(treat.vec.fert) == TRUE)] <- 0 
     
-    lambda.zero.in <- lambda.zero.in + f.to.nf.rate #update 'standard' fertile to non fertile rate to account for treatment 
+    lambda.zero.in <- lambda.zero.in + f.to.nf.rate 
     
-
-  
-  #.fi = 'from inside': worms moving from a fertile or infertile compartment
-  #.fo = 'from outside': completely new adult worms 
-  
   ##simulate death and aging of females
   worm.dead.nf <- rbinom(N, cur.Wm.nf, mort.fems) #movement to next compartment
   
@@ -409,7 +368,6 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
   
   worm.loss.age.f <- rbinom(N, (cur.Wm.f - worm.dead.f), rep((DT / time.each.comp), N))
   
-  
   #calculate worms moving between fertile and non fertile and deaths and aging 
   
   #females from fertile to infertile
@@ -417,16 +375,13 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
   new.worms.nf.fi <- rep(0, N)
   
   trans.fc <- which((cur.Wm.f - worm.dead.f - worm.loss.age.f) > 0)
-  #print(trans.fc)
   
   if(length(trans.fc) > 0)
   {
     new.worms.nf.fi[trans.fc] <- rbinom(length(trans.fc), (cur.Wm.f[trans.fc] - worm.dead.f[trans.fc] - worm.loss.age.f[trans.fc]), lambda.zero.in[trans.fc]) 
   }
   
-  #else {new.worms.nf.fi <- 0}
-  
-  #females worms from infertile to fertile #this happens independent of males, but production of mf depends on males
+  #females worms from infertile to fertile
   
   new.worms.f.fi <- rep(0, N)
   
@@ -452,10 +407,6 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
     f.out <- cur.Wm.f + new.worms.f.fi - worm.loss.age.f - new.worms.nf.fi + w.f.l.c[[6]] - worm.dead.f
   }   
   
-  # if(male.tot.worms < 0) {male.tot.worms <- 0}
-  # if(nf.out < 0) {nf.out <- 0}
-  # if(f.out < 0) {f.out <- 0}
-  
   list(male.tot.worms,
        worm.loss.males,
        nf.out,
@@ -467,14 +418,12 @@ change.worm.per.ind<- function(delta.hz, delta.hinf, c.h, L3, m , beta, compartm
 weibull.mortality <- function(DT, par1, par2, age.cats)
   
 {
-  ## reparameterized - default for adult worms is 
   ## take midpoint of age categories for hazard rates
   d <- diff(age.cats)[1]/2
   out <- DT  * (par1 ^ (par2)) * par2 * ( (age.cats+d) ^ (par2-1) )
   
   return(pmin(out, 1))
-  
-  #return(out)
+
 }
 
 prevalence.for.age <- function(age, ss.in, main.dat)
@@ -514,13 +463,11 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
   
   treat.start = round(treat.start / (DT)); treat.stop = treat.start + round(n.trt*(treat.int/(DT )))
   
-  #gam.dis <- (ABR ^ ex) * cor + int  #theta / k for gamma
   gam.dis <- ke
   
   ###################################################################################
   ## CTS-specific code - extract list element parameters & define indicator variables
   ###################################################################################
-  ## do not do clinical trial if equilibrium inputs are included (this could be modified)
   ## to be conditional on specific equilibrium inputs
   if (do.clin.trial) {
     MOM <- clin.trial$MOM
@@ -546,7 +493,7 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     L1indi <- 7
     L2indi <- 8
     L3indi <- 9
-    nfix <- L3indi ## nfix indicates single column variables
+    nfix <- L3indi 
     N.cohorts <- 2
   } else {
     MOM <- clin.trial$MOM
@@ -587,10 +534,9 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     stop.trial <- start.trial + 10
   }
   
-  
   #columns to set to zero when an individual dies
   
-  cols.to.zero <- seq(from = 1, to = (nfix + num.mf.comps + 3*num.comps.worm))  #should this include 1 for treatment?
+  cols.to.zero <- seq(from = 1, to = (nfix + num.mf.comps + 3*num.comps.worm))  
   cols.to.zero <- cols.to.zero[-c(1,L2indi, L3indi)] #compliance, L2 and L3 do not become zero when an individual dies
   
   #used to perform operations on different worm and mf compartments 
@@ -618,23 +564,16 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
   mort.rates.worms.macro <- mort.rates.worms 
   
   if (do.clin.trial) {
-   # mu.w1.macro <- exp( 1/mu.w2*log( -log(1-macro.eff)) - log(macro.t)  )
     mu.w1.macro <- min(DT*(-log(1-macro.eff)/(macro.t)), 1)
     mort.rates.worms.macro <- weibull.mortality(DT = DT, par1 = mu.w1, par2 = mu.w2, age.cats = age.cats) + mu.w1.macro
-    #print(mort.rates.worms.macro)
   }
   
-  #mort.rates.worms <- rep(0.1*DT, num.comps.worm) #to test no senescence 
-  
+
   fec.rates.worms <- 1.158305 * fec.w.1 / (fec.w.1 + (fec.w.2 ^ -age.cats) - 1) #no DT - Rk4
-  
-  #fec.rates.worms <- rep(1.15, num.comps.worm) #to test no senescence 
   
   age.cats.mf <- seq(0, 2.5, length = num.mf.comps)
   
   mort.rates.mf <- weibull.mortality(DT = 1, par1 = mu.mf1, par2 = mu.mf2, age.cats = age.cats.mf)
-  
-  #mort.rates.mf <- rep(1.2, num.mf.comps) #to test no senescence 
   
   ###########################################################
   ## CTS-specific code - initialise pegnancy & output vectors 
@@ -675,13 +614,13 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     cur.age <- rep(0, N)
 
     
-    for(i in 1 : 75000) #if at equilibrium you saved the age at which inds die and simulated further, you should get an exponential distribution
+    for(i in 1 : 75000) 
     {
       cur.age <- cur.age + DT
       
       death.vec <- rbinom(N, 1, (1/mean.age) * DT) 
       
-      cur.age[which(death.vec == 1)] <- 0 #set individuals which die to age 0
+      cur.age[which(death.vec == 1)] <- 0 
       cur.age[which(cur.age >= real.max.age)] <- 0
       
       #########################################################
@@ -721,11 +660,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     ###############################################
     #matrix for l1 delay
     
-    # num.lmd.cols <- 4 / dt.days
-    # l1.delay <- matrix(int.L1, ncol= num.lmd.cols, nrow= N)
-    # inds.d.mats <- seq(2,(length(l1.delay[1,])))
-    
-    
     l1.delay <- rep(int.L3, N)
     
     ###############################################
@@ -733,13 +667,11 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     ###############################################
     #matrix for tracking mf for l1 delay
     
-    
     num.mfd.cols <- 2
     # 
     mf.delay <- matrix(int.mf, ncol= num.mfd.cols, nrow= N)
     inds.mfd.mats <- seq(2,(length(mf.delay[1,])))
     
-    #mf.delay <- rep(int.mf, N)
     ###############################################
     #matrix for exposure for delay
     num.exp.cols <- 2
@@ -747,7 +679,7 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     inds.exp.mats <- seq(2,(length(exposure.delay[1,])))  
     
     #matrix for first time step
-    all.mats[[1]] <- matrix(, nrow=N, ncol=num.cols)
+    all.mats[[1]] <- matrix( , nrow=N, ncol=num.cols)
     
     all.mats[[1]][,  (worms.start) : num.cols] <- int.worms
     
@@ -785,12 +717,7 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     mean.mf.per.snip <- temp[[1]]
     CMFL<- calc.CMFL(ss.mf.pi = temp[[2]], data = all.mats[[1]], ss.wt)
     
-    #inds.five <- which(all.mats[[1]][,ageindi] >= 5)
-    
-    #prev.by.ss <- length(which(temp[[2]][inds.five] > 0)) / length(inds.five) 
-    
     prev.by.ss <- prevalence.for.age(age = age.prev.in, ss.in = temp, main.dat = all.mats[[1]])
-    
     
     sero.prev <- c()
     sero.prev.10 <- c()
@@ -817,14 +744,12 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     sero.prev.vec <- input.eq[[4]]
     exposure.delay <- input.eq[[9]] 
     
-    #num.exp.cols <- 2 #THIS NEEDS TO MADE FLEXIBLE WHEN DELAY SITUATION IS 'SOLVED'
     inds.exp.mats <- seq(2,(length(exposure.delay[1,]))) 
     
     l.extras <- input.eq[[5]]
     inds.l.mat <- seq(2,(length(l.extras[1,])))
     
     l1.delay <- input.eq[[6]]
-    #num.mfd.cols <- 2 #THIS NEEDS TO MADE FLEXIBLE WHEN DELAY SITUATION IS 'SOLVED'
     mf.delay <- input.eq[[7]]
     inds.mfd.mats <- seq(2,(length(mf.delay[1,])))
     
@@ -855,7 +780,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     
     treat.vec <- input.eq[[8]]#for time since treatment calculations 
     
-    #if(input.var == 'treatment') {iter.last.treat <- input.eq[[10]]}
     
   }
  
@@ -868,11 +792,7 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
   all.mats[[1]][,compindi] <- out.comp
   
   treat.vec <- MDA.vec <- CT.vec <- rep(NA, N) #for time since treatment calculations 
-  
-  #for debugging
-  #l2par <- c()
-  #l2par2 <- c()
-  
+
   #################################################################
   ### time loop
   #################################################################
@@ -886,9 +806,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       print(paste(r.time, 'yrs', sep = ' '))
     }
     }
-    
-    #stores means from previous steps in an attempt to reduce 
-    #the amount of memory used. This is a bit sloppy and needs to be replaced with a ring buffer (see ritch fitzjohn 'ring' package)
     
     if(i > 1) 
     {
@@ -984,15 +901,13 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       if (i==(start.trial-2)) { # 2 steps before the trials 
       eligible <- rep(0,N)
       ## eligibility based on age, pregnancy status, being positive for mf
-      ## and not being a non-complier!
       eligible[which(all.mats.cur[,ageindi]>min.age & 
                        all.mats.cur[,pregindi]!=1 &
                        temp[[2]]>min.mf & all.mats.cur[,compindi]==0)] <- 1
       N.eligible <- sum(eligible)
       actual.ss <- floor(N.eligible/N.cohorts) 
       applied.ss <- min(c(target.ss, actual.ss))
-      ## define cohorts by dividing eligibles up untill target is met
-      ## 
+      ## define cohorts by dividing eligibles up until target is met
       indicies <- which(eligible>0)
    
       if (actual.ss>target.ss) {
@@ -1003,8 +918,8 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       }
       c1 <- sample(indicies, applied.ss)
       c2 <- indicies[indicies%in%c1==F]
-      all.mats.temp[c1,cohortindi] <- 1 ## changed to temp
-      all.mats.temp[c2,cohortindi] <- 2 ## changed to temp
+      all.mats.temp[c1,cohortindi] <- 1 
+      all.mats.temp[c2,cohortindi] <- 2 
       
       n.per.cohort[i+1, ] <- c(sum(all.mats.temp[,cohortindi]==1), 
                                sum(all.mats.temp[,cohortindi]==2))
@@ -1014,15 +929,11 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       prev.diff[i+1] <- prev.by.ss.cohort[i, 1] - prev.by.ss.cohort[i, 2]
       ## infected or not output
       tmp <- as.numeric(temp[[2]]>0)
-      # prev.by.ss.cohort[i+1,] <- c( mean(tmp[c1]), mean(tmp[c2]) )  
       sd.prev.by.ss.cohort[i+1,] <- c( sd(tmp[c1]), sd(tmp[c2]) )  
       mn.mf.by.ss.cohort[i+1,] <- c( mean(temp[[2]][c1]), mean(temp[[2]][c2]) )
       mf.diff[i+1] <- mn.mf.by.ss.cohort[i, 1] - mn.mf.by.ss.cohort[i, 2]
       sd.mf.by.ss.cohort[i+1,] <- c( sd(temp[[2]][c1]), sd(temp[[2]][c2]) )
       ############################
-      
-      
-      
       } 
     }
     ##############################################################
@@ -1058,11 +969,11 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     
     l.extras[,1] <- new.worms
     
-    rann <- runif(N, 0, 1) #random number for each individual to see if treatment is given (depending on compliance)
+    rann <- runif(N, 0, 1) #random number for each individual to see if treatment is given
     
     if(i == 1) {treat.vec.in <- treat.vec 
     MDA.vec.in = MDA.vec
-    CT.vec.in = CT.vec} #debugging ??
+    CT.vec.in = CT.vec} 
     
     for(k in 1 : num.comps.worm) #go through each adult worm compartment
       
@@ -1080,7 +991,7 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
                                  cohortindi=cohortindi, do.clin.trial=do.clin.trial, MOM=MOM, macro.t=macro.t ,start.trial=start.trial,
                                  stop.trial=stop.trial, trial.int=trial.int,  stop.treat.trial=stop.treat.trial, MDA.vec=MDA.vec.in, CT.vec=CT.vec.in)
       
-      from.last <- res #assign output to use at next iteration, indexes 2, 5, 6 (worms moving through compartments)
+      from.last <- res #assign output to use at next iteration
       
       #update male worms in matrix for compartment k
       
@@ -1088,10 +999,8 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       
       #update females worms in matrix
       
-      all.mats.temp[, (nfix + num.mf.comps + num.comps.worm + k)] <- res[[3]] #infertile, num.comps.worm skips over males
-      all.mats.temp[, (nfix + num.mf.comps + 2*num.comps.worm + k)] <- res[[4]] #fertile, num.comps.worm skips over males and infertile females
-      
-      #print(head(all.mats.temp))
+      all.mats.temp[, (nfix + num.mf.comps + num.comps.worm + k)] <- res[[3]] #infertile
+      all.mats.temp[, (nfix + num.mf.comps + 2*num.comps.worm + k)] <- res[[4]] #fertile
       
     }
     
@@ -1100,7 +1009,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       treat.vec.in <- res[[7]]
       MDA.vec.in <- res[[8]]
       CT.vec.in <- res[[9]]
-     #print(mean(treat.vec.in, na.rm=T))
      } # update treatment vector indicating time 
     ## since last treatment (by clinical trial or MDA)
     
@@ -1113,12 +1021,8 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
                              mu.rates.mf = mort.rates.mf, fec.rates = fec.rates.worms, mf.move.rate=mf.move.rate, up=up, kap=kap, iteration = i, 
                              treat.vec = treat.vec.in, give.treat=give.treat, treat.start=treat.start, nfix=nfix, N=N, do.clin.trial=do.clin.trial, start.trial = start.trial)
       
-      #print(res.mf)
-      
       all.mats.temp[, nfix + mf.c] <- res.mf
     }
-    
-    
     
     ####l1 and mf delay
     
@@ -1130,14 +1034,9 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     exposure.delay[, inds.exp.mats] <- exposure.delay[, (inds.exp.mats -1)]
     mf.delay[, inds.mfd.mats] <- mf.delay[, (inds.mfd.mats - 1)] 
     
-    #print(length(mf.delay.temp))
-    #print(length(l1.delay.temp))
-    
-    
     #new L1 L2 and L3
     
-    
-    mf.temp <- rowSums(all.mats.cur[, (nfix+1) : (nfix + num.mf.comps)]) #sum mf over compartments, mf start in column 7
+    mf.temp <- rowSums(all.mats.cur[, (nfix+1) : (nfix + num.mf.comps)]) #sum mf over compartments
     
     
     all.mats.temp[, L1indi] <- calc.L1(beta, mf = mf.temp, mf.delay.in = mf.delay.temp, expos = tot.ex.ai, delta.vo=delta.vo,
@@ -1152,15 +1051,14 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     exposure.delay[, 1] <- tot.ex.ai
     
     
-    #new individual exposure for newborns, clear rows for new borns
+    #new individual exposure for newborns
     
     if(length(to.die) > 0)
     {
-      #ex.vec[to.die] <- rlnorm(length(to.die), mu.ln, sigma.ln)
       ex.vec[to.die] <- rgamma(length(to.die), gam.dis, gam.dis)
       
       l.extras[to.die, ] <- 0 #establishing adult worms 
-      mf.delay[to.die, 1] <- 0 #individuals dies so no contribution to l1s at this timestep
+      mf.delay[to.die, 1] <- 0 
       l1.delay[to.die] <- 0
       
       treat.vec[to.die] <- NA
@@ -1191,7 +1089,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       prev.diff[i+1] <- prev.by.ss.cohort[i+1, 1] - prev.by.ss.cohort[i+1, 2]
       ## infected or not output
       tmp <- as.numeric(temp[[2]]>0)
-     # prev.by.ss.cohort[i+1,] <- c( mean(tmp[c1]), mean(tmp[c2]) )  
       sd.prev.by.ss.cohort[i+1,] <- c( sd(tmp[c1]), sd(tmp[c2]) )  
       mn.mf.by.ss.cohort[i+1,] <- c( mean(temp[[2]][c1]), mean(temp[[2]][c2]) )
       mf.diff[i+1] <- mn.mf.by.ss.cohort[i+1, 1] - mn.mf.by.ss.cohort[i+1, 2]
@@ -1224,15 +1121,8 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
     
     L1[i + 1] <- mean(all.mats.temp[, L1indi])
     
-    #####parameters for fly larvae dynamics
-  
-    #debugging
-    #l2par[i] <- mean(mf.delay.temp)
-    #l2par2[i] <- mean(l1.delay.temp)
-    
-    ######
-    ###bit all ove the place and in development!
-    #####
+
+
     if(type.sero == 1)
       
     {  
