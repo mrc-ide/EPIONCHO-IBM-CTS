@@ -1,3 +1,4 @@
+## Written by Johnathan ID Hamley and Martin Walker
 
 #function rotate matrix, used in mf function 
 rotate <- function(x) t(apply(x, 2, rev))
@@ -1127,8 +1128,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       
     {  
       
-      #age groups #automate this and have equal age group sizes?
-      
       ###males 
       
       ind <- which(all.mats.temp[,ageindi] >= 0 & all.mats.temp[,ageindi] <= 2 & all.mats.temp[,sexindi] == 1)
@@ -1167,8 +1166,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
       if(i == it.thresh) 
       {
         
-        ######
-        #####
         #initialize sero recording, depends on whether equilibrium is input or calculated during current run
         
         if(input.var == 0)
@@ -1178,21 +1175,19 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
           sero.prev.vec[ind] <- 1
         }
         
-        else #CHECK THIS
+        else 
         {
           ind <- which(rowSums(all.mats.temp[, worms.start:num.cols]) > 0 & sero.prev.vec == 0 & sensitivity == 1) #which inds have worms but didn't at the last time step
           sero.prev.vec[ind] <- 1 #new (adult worm) infections become seropositive
           sero.prev.vec[to.die] <- 0 #newborns are negative
         }
         
-        #########
-        ##########
-        
+
         ###############
         #age profiles for males and females
         ###############
         
-        for(h in 1:length(inds.sero.males)) #could be vectorized
+        for(h in 1:length(inds.sero.males)) 
         {
           sprev.by.group.m[[h]] <- sum(sero.prev.vec[inds.sero.males[[h]]]) / length(inds.sero.males[[h]]) #males
           
@@ -1251,8 +1246,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
         
       }
       
-      
-      #stores sero prevalence for whole population and over 10s
       
       sero.prev[i] <- sum(sero.prev.vec) / N
       sero.prev.10[i] <- sum(sero.prev.vec[which(all.mats.cur[,ageindi] < 10)]) / length(which(all.mats.cur[,ageindi] < 10))
@@ -1332,7 +1325,7 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
   }
   ##############################################################################
   ## end of CTS-specific code chunck
-  #####
+  #############################################################################
 
   #ouput
   out.mf <- unlist(lapply(all.mats, FUN = `[`, 1))
@@ -1350,7 +1343,6 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
   
   its <- seq(0:time.its)
   timez <- its * DT
-  # which rows to output
   
   rows.out <- its[seq(1, length(its), by = round(max(every,DT)/DT))]
   
@@ -1392,7 +1384,5 @@ run.mod <- function(ABR=1000,delta.hz  = 0.1864987,delta.hinf = 0.002772749 , c.
   }
   out
   }
-
-#save.image(paste("rfils/","eoibmout.",iter,".RData", sep=""))
 
 
